@@ -1,15 +1,11 @@
 """
-BUSCAMINAS - Implementación Backend
 Estructura de Datos - Entrega Final
 """
-
 import random
 from typing import List, Tuple, Optional
 
-
-# ============================================
 # ESTRUCTURA 1: LISTA ENLAZADA CIRCULAR
-# ============================================
+
 class NodoCelda:
     """Nodo para lista enlazada que representa una celda del tablero"""
 
