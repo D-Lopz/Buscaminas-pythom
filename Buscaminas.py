@@ -1,5 +1,7 @@
 """
 Estructura de Datos - Entrega Final
+David López y Jhon Alexis
+Back-end
 """
 import random
 from typing import List, Tuple, Optional
@@ -44,6 +46,7 @@ class ListaEnlazadaCircular:
         if not self.cabeza:
             return None
         actual = self.cabeza
+
         while True:
             if actual.fila == fila and actual.col == col:
                 return actual
@@ -52,17 +55,15 @@ class ListaEnlazadaCircular:
                 break
         return None
 
-
-# ============================================
 # ESTRUCTURA 2: PILA (para deshacer jugadas)
-# ============================================
+
 class NodoPila:
     """Nodo para la pila de movimientos"""
 
     def __init__(self, fila: int, col: int, accion: str):
         self.fila = fila
         self.col = col
-        self.accion = accion  # "revelar" o "marcar"
+        self.accion = accion
         self.siguiente = None
 
 
@@ -91,9 +92,8 @@ class Pila:
         return self.tope is None
 
 
-# ============================================
 # ESTRUCTURA 3: COLA (para expansión de celdas)
-# ============================================
+
 class NodoCola:
     """Nodo para la cola de procesamiento"""
 
@@ -135,9 +135,8 @@ class Cola:
         return self.frente is None
 
 
-# ============================================
 # CLASE PRINCIPAL DEL JUEGO
-# ============================================
+
 class Buscaminas:
     """Clase principal que gestiona la lógica del juego Buscaminas"""
 
@@ -201,21 +200,31 @@ class Buscaminas:
                                 contador += 1
                     celda.minas_adyacentes = contador
 
-    def revelar_celda(self, fila: int, col: int) -> bool:
+    def revelar_celda(self, fila: int, col: int) -> dict:
         """
         Revela una celda y expande automáticamente si es necesario
-        Returns: True si la jugada es válida, False si hay mina
+        Returns: dict con información del resultado
         """
+        resultado = {
+            'valido': True,
+            'game_over': False,
+            'victoria': False,
+            'celdas_reveladas': []
+        }
+
         if self.juego_terminado:
-            return False
+            resultado['valido'] = False
+            return resultado
 
         if not (0 <= fila < self.filas and 0 <= col < self.columnas):
-            return True
+            resultado['valido'] = False
+            return resultado
 
         celda = self.matriz[fila][col]
 
         if celda.revelada or celda.marcada:
-            return True
+            resultado['valido'] = False
+            return resultado
 
         # Guardar en historial
         self.historial.apilar(fila, col, "revelar")
@@ -225,7 +234,9 @@ class Buscaminas:
             celda.revelada = True
             self.juego_terminado = True
             self.victoria = False
-            return False
+            resultado['game_over'] = True
+            resultado['celdas_reveladas'].append((fila, col))
+            return resultado
 
         # Usar COLA para expansión automática (BFS)
         cola = Cola()
@@ -245,6 +256,7 @@ class Buscaminas:
 
             celda_actual.revelada = True
             self.celdas_reveladas += 1
+            resultado['celdas_reveladas'].append((f, c))
 
             # Si no tiene minas adyacentes, expandir
             if celda_actual.minas_adyacentes == 0:
@@ -257,29 +269,32 @@ class Buscaminas:
 
         # Verificar victoria
         self._verificar_victoria()
-        return True
+        resultado['victoria'] = self.victoria
+        resultado['game_over'] = self.victoria
 
-    def marcar_celda(self, fila: int, col: int):
+        return resultado
+
+    def marcar_celda(self, fila: int, col: int) -> bool:
         """Marca o desmarca una celda como posible mina"""
         if self.juego_terminado:
-            return
+            return False
 
         if not (0 <= fila < self.filas and 0 <= col < self.columnas):
-            return
+            return False
 
         celda = self.matriz[fila][col]
 
         if celda.revelada:
-            return
+            return False
 
         celda.marcada = not celda.marcada
         self.historial.apilar(fila, col, "marcar")
+        return True
 
-    def deshacer_movimiento(self):
+    def deshacer_movimiento(self) -> bool:
         """Deshace el último movimiento usando la PILA"""
         if self.historial.esta_vacia():
-            print("No hay movimientos para deshacer")
-            return
+            return False
 
         fila, col, accion = self.historial.desapilar()
         celda = self.matriz[fila][col]
@@ -290,12 +305,55 @@ class Buscaminas:
         elif accion == "marcar":
             celda.marcada = not celda.marcada
 
+        return True
+
     def _verificar_victoria(self):
         """Verifica si el jugador ha ganado"""
         celdas_sin_minas = self.filas * self.columnas - self.num_minas
         if self.celdas_reveladas == celdas_sin_minas:
             self.juego_terminado = True
             self.victoria = True
+
+    def reiniciar_juego(self):
+        """Reinicia el juego completamente"""
+        self.juego_terminado = False
+        self.victoria = False
+        self.celdas_reveladas = 0
+
+        # Limpiar historial
+        while not self.historial.esta_vacia():
+            self.historial.desapilar()
+
+        # Reiniciar todas las celdas
+        for i in range(self.filas):
+            for j in range(self.columnas):
+                celda = self.matriz[i][j]
+                celda.tiene_mina = False
+                celda.revelada = False
+                celda.marcada = False
+                celda.minas_adyacentes = 0
+
+        # Colocar nuevas minas
+        self._colocar_minas()
+        self._calcular_numeros()
+
+    def obtener_banderas_restantes(self) -> int:
+        """Retorna cuántas banderas quedan por colocar"""
+        banderas_colocadas = 0
+        for i in range(self.filas):
+            for j in range(self.columnas):
+                if self.matriz[i][j].marcada:
+                    banderas_colocadas += 1
+        return self.num_minas - banderas_colocadas
+
+    def revelar_todo(self) -> List[Tuple[int, int]]:
+        """Retorna las posiciones de todas las minas"""
+        minas = []
+        for i in range(self.filas):
+            for j in range(self.columnas):
+                if self.matriz[i][j].tiene_mina:
+                    minas.append((i, j))
+        return minas
 
     def obtener_estado_celda(self, fila: int, col: int) -> dict:
         """Retorna el estado de una celda"""
@@ -340,9 +398,8 @@ class Buscaminas:
         print()
 
 
-# ============================================
 # FUNCIÓN PRINCIPAL PARA PROBAR
-# ============================================
+
 def main():
     """Función principal de prueba"""
     print("=== BUSCAMINAS - Backend ===\n")
@@ -354,10 +411,25 @@ def main():
     print("- Revelar: R fila columna")
     print("- Marcar: M fila columna")
     print("- Deshacer: U")
+    print("- Nuevo: N")
     print("- Salir: Q\n")
 
-    while not juego.juego_terminado:
+    while True:
         juego.mostrar_tablero()
+
+        if juego.juego_terminado:
+            if juego.victoria:
+                print("\n¡FELICIDADES! Has ganado.")
+            else:
+                print("\n¡BOOM! Has perdido.")
+                juego.mostrar_tablero(revelar_todo=True)
+
+            respuesta = input("\n¿Jugar de nuevo? (S/N): ").strip().upper()
+            if respuesta == 'S':
+                juego.reiniciar_juego()
+                continue
+            else:
+                break
 
         comando = input("Ingresa comando: ").strip().upper().split()
 
@@ -366,30 +438,36 @@ def main():
 
         if comando[0] == 'Q':
             break
+        elif comando[0] == 'N':
+            juego.reiniciar_juego()
         elif comando[0] == 'U':
-            juego.deshacer_movimiento()
+            if juego.deshacer_movimiento():
+                print("Movimiento deshecho")
+            else:
+                print("No hay movimientos para deshacer")
         elif comando[0] == 'R' and len(comando) == 3:
             try:
                 fila = int(comando[1])
                 col = int(comando[2])
-                if not juego.revelar_celda(fila, col):
+                resultado = juego.revelar_celda(fila, col)
+                if not resultado['valido']:
+                    print("Movimiento inválido")
+                elif resultado['game_over'] and not resultado['victoria']:
                     print("\n¡BOOM! Has perdido.")
-                    juego.mostrar_tablero(revelar_todo=True)
             except ValueError:
                 print("Coordenadas inválidas")
         elif comando[0] == 'M' and len(comando) == 3:
             try:
                 fila = int(comando[1])
                 col = int(comando[2])
-                juego.marcar_celda(fila, col)
+                if juego.marcar_celda(fila, col):
+                    print("Celda marcada/desmarcada")
+                else:
+                    print("No se puede marcar esta celda")
             except ValueError:
                 print("Coordenadas inválidas")
         else:
             print("Comando inválido")
-
-        if juego.victoria:
-            print("\n¡FELICIDADES! Has ganado.")
-            juego.mostrar_tablero(revelar_todo=True)
 
     print("\nGracias por jugar.")
 
