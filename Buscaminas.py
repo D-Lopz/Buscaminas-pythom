@@ -124,8 +124,8 @@ class Cola:
     def desencolar(self) -> Optional[Tuple[int, int]]:
         if self.esta_vacia():
             return None
-        nodo = self.frente
-        self.frente = self.frente.siguiente
+        nodo = self.frente  # Guardar el frente
+        self.frente = self.frente.siguiente  # Avanzar frente
 
         if self.frente is None: # Si era el último elemento
             self.final = None
@@ -142,24 +142,20 @@ class Buscaminas:
     """Clase principal que gestiona la lógica del juego Buscaminas"""
 
     def __init__(self, filas: int = 10, columnas: int = 10, num_minas: int = 15):
-        """
-        Inicializa el juego
-        Args:
-            filas: número de filas del tablero
-            columnas: número de columnas del tablero
-            num_minas: cantidad de minas a colocar
-        """
+
+        # Inicializa el juego
+
         self.filas = filas
         self.columnas = columnas
         self.num_minas = num_minas
-        self.tablero = ListaEnlazadaCircular()
-        self.historial = Pila()
+        self.tablero = ListaEnlazadaCircular()  # ESTRUCTURA 1
+        self.historial = Pila()  # ESTRUCTURA 2
         self.juego_terminado = False
         self.victoria = False
         self.celdas_reveladas = 0
 
         # Crear matriz auxiliar para acceso rápido
-        self.matriz = [[None for _ in range(columnas)] for _ in range(filas)]
+        self.matriz = [[None for _ in range(columnas)] for _ in range(filas)] # _ = bucle infinito
 
         # Inicializar tablero
         self._inicializar_tablero()
@@ -177,25 +173,29 @@ class Buscaminas:
         """Coloca minas aleatoriamente en el tablero"""
         minas_colocadas = 0
         while minas_colocadas < self.num_minas:
-            fila = random.randint(0, self.filas - 1)
-            col = random.randint(0, self.columnas - 1)
+            fila = random.randint(0, self.filas - 1)  # Fila aleatoria (0-9)
+            col = random.randint(0, self.columnas - 1)  # Columna aleatoria (0-9)
             celda = self.matriz[fila][col]
 
-            if not celda.tiene_mina:
+            if not celda.tiene_mina:  # Si aún no tiene mina
                 celda.tiene_mina = True
                 minas_colocadas += 1
 
     def _calcular_numeros(self):
         """Calcula el número de minas adyacentes para cada celda"""
-        direcciones = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        direcciones = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)] # Direcciones de las celdas
 
         for i in range(self.filas):
             for j in range(self.columnas):
                 celda = self.matriz[i][j]
                 if not celda.tiene_mina:
                     contador = 0
+
+                    # Revisar las 8 celdas vecinas
                     for df, dc in direcciones:
                         ni, nj = i + df, j + dc
+
+                        # Verificar que esté dentro del tablero
                         if 0 <= ni < self.filas and 0 <= nj < self.columnas:
                             if self.matriz[ni][nj].tiene_mina:
                                 contador += 1
@@ -206,13 +206,14 @@ class Buscaminas:
         Revela una celda y expande automáticamente si es necesario
         Returns: dict con información del resultado
         """
-        resultado = {
+        resultado = { # Reporte de movimientos
             'valido': True,
             'game_over': False,
             'victoria': False,
             'celdas_reveladas': []
         }
 
+        # === VALIDACIONES ===
         if self.juego_terminado:
             resultado['valido'] = False
             return resultado
@@ -227,7 +228,7 @@ class Buscaminas:
             resultado['valido'] = False
             return resultado
 
-        # Guardar en historial
+            # === GUARDAR EN HISTORIAL (PILA) ===
         self.historial.apilar(fila, col, "revelar")
 
         # Si hay mina, juego terminado
@@ -235,14 +236,14 @@ class Buscaminas:
             celda.revelada = True
             self.juego_terminado = True
             self.victoria = False
-            resultado['game_over'] = True
-            resultado['celdas_reveladas'].append((fila, col))
+            resultado['Game_over'] = True
+            resultado['Celdas_reveladas'].append((fila, col))
             return resultado
 
-        # Usar COLA para expansión automática (BFS)
-        cola = Cola()
-        cola.encolar(fila, col)
-        visitados = set()
+        # Usar COLA para expansión automática (BFS) Si no hay mina
+        cola = Cola()  # ESTRUCTURA 3: Crear cola vacía
+        cola.encolar(fila, col)  # Agregar celda inicial
+        visitados = set()  # Para no procesar la misma celda dos veces
 
         while not cola.esta_vacia():
             f, c = cola.desencolar()
