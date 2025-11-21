@@ -107,8 +107,8 @@ class Cola:
     """Cola para procesar celdas adyacentes en expansión automática"""
 
     def __init__(self):
-        self.frente = None
-        self.final = None
+        self.frente = None  # Primero en la fila (se procesa primero)
+        self.final = None  # Último en la fila (se agregó recientemente)
         self.tamaño = 0
 
     def encolar(self, fila: int, col: int):
@@ -117,8 +117,8 @@ class Cola:
             self.frente = nuevo
             self.final = nuevo
         else:
-            self.final.siguiente = nuevo
-            self.final = nuevo
+            self.final.siguiente = nuevo  # El último apunta al nuevo
+            self.final = nuevo  # Nuevo es el nuevo último
         self.tamaño += 1
 
     def desencolar(self) -> Optional[Tuple[int, int]]:
@@ -126,7 +126,8 @@ class Cola:
             return None
         nodo = self.frente
         self.frente = self.frente.siguiente
-        if self.frente is None:
+
+        if self.frente is None: # Si era el último elemento
             self.final = None
         self.tamaño -= 1
         return (nodo.fila, nodo.col)
@@ -470,7 +471,6 @@ def main():
             print("Comando inválido")
 
     print("\nGracias por jugar.")
-
 
 if __name__ == "__main__":
     main()

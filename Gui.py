@@ -3,7 +3,6 @@ Estructura de Datos - Entrega Final
 David López y Jhon Alexis
 Interfaz Gráfica (GUI)
 
-IMPORTANTE: Este archivo debe estar en la misma carpeta que buscaminas_backend.py
 """
 
 import tkinter as tk
