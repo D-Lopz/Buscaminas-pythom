@@ -36,7 +36,7 @@ class BuscaminasGUI:
         self.filas = 10
         self.columnas = 10
         self.minas = 15
-        self.juego = None
+        self.juego = None #instancia del back-end
         self.botones = []
 
         # Crear interfaz
@@ -65,7 +65,7 @@ class BuscaminasGUI:
             frame_top,
             text="🔄 Nuevo",
             font=('Arial', 12, 'bold'),
-            command=self._nuevo_juego,
+            command=self._nuevo_juego, # Sin paréntesis = pasar la referencia de la función
             bg='#27ae60',
             fg='white',
             padx=15,
@@ -77,7 +77,7 @@ class BuscaminasGUI:
             frame_top,
             text="↶ Deshacer",
             font=('Arial', 12, 'bold'),
-            command=self._deshacer,
+            command = self._deshacer,
             bg='#3498db',
             fg='white',
             padx=15,
@@ -88,7 +88,7 @@ class BuscaminasGUI:
         self.frame_tablero = tk.Frame(self.root, bg='#2c3e50', padx=10, pady=10)
         self.frame_tablero.pack()
 
-        # Frame inferior con instrucciones
+        # Frame inferior con instrucciones simples al jugador.
         frame_bottom = tk.Frame(self.root, bg='#34495e', padx=10, pady=8)
         frame_bottom.pack(fill=tk.X)
 
@@ -115,16 +115,16 @@ class BuscaminasGUI:
                     self.frame_tablero,
                     text='',
                     width=3,
-                    height=1,
                     font=('Arial', 12, 'bold'),
+                    height=1,
                     bg='#95a5a6',
                     relief=tk.RAISED,
                     borderwidth=2
                 )
-                btn.grid(row=i, column=j, padx=1, pady=1)
+                btn.grid(row=i, column=j, padx=1, pady=1) # Grid coloca los elementos en tabla
 
                 # Eventos
-                btn.bind('<Button-1>', lambda e, f=i, c=j: self._click_izquierdo(f, c))
+                btn.bind('<Button-1>', lambda e, f=i, c=j: self._click_izquierdo(f, c)) #Conecta un evento con una función
                 btn.bind('<Button-3>', lambda e, f=i, c=j: self._click_derecho(f, c))
 
                 fila.append(btn)
@@ -223,11 +223,11 @@ class BuscaminasGUI:
             btn = self.botones[f][c]
             btn.config(text='💣', bg='#e74c3c', relief=tk.SUNKEN, font=('Arial', 10))
 
-        messagebox.showinfo("Perdiste", "💥 ¡BOOM! Has perdido\n\n¡Inténtalo de nuevo!")
+        messagebox.showinfo("Perdiste", "💥 ¡Pailas! perdiste\n\n¡Inténtalo de nuevo!")
 
     def _victoria(self):
         """Muestra victoria"""
-        messagebox.showinfo("¡Victoria!", "🎉 ¡Felicidades!\n\n¡Has ganado el juego!")
+        messagebox.showinfo("¡Victoria!", "🎉 ¡Felicidades!\n\n¡Ganaste el juego!")
 
 
 def main():
